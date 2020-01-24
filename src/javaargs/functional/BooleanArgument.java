@@ -1,8 +1,5 @@
 package javaargs.functional;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 public class BooleanArgument 
 	implements Argument {
 	
@@ -16,17 +13,5 @@ public class BooleanArgument
 		boolean value) {
 		this.value = value;
 	}
-	
-	public void setBooleanArgument( 
-		boolean value,
-		Consumer<Boolean> setArgument) {
-		setArgument.accept(value);
-	}
-		
-	public boolean getBooleanArgument(
-		Supplier<Boolean> getValue) {
-		return getValue.get();
-	}
-	
 	
 }

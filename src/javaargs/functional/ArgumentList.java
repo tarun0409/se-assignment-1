@@ -1,48 +1,71 @@
 package javaargs.functional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ArgumentList {
 	
-	HashMap<Character,ArrayList<String>> elementToValueStringMap = new HashMap<Character,ArrayList<String>>();
+	private HashMap<Character,ArrayList<String>> elementToValueStringMap = new HashMap<Character,ArrayList<String>>();
 	
 	public ArgumentList(
 		String argumentString) {
-		String[] arguments = getArgumentList(argumentString, (string)->string.split(" "));
+		List<String> arguments = getArgumentList(argumentString, (string)->Arrays.asList(string.split(" ")));
+		arguments = arguments.stream().map(string -> string.trim()).filter(string -> !string.isEmpty()).collect(Collectors.toList());
 		parseArguments(arguments);
 	}
 	
-	public HashMap<Character,ArrayList<String>> getArgumentValues(char elementId) {
-		return getElementToValueStringMap(() -> elementToValueStringMap);
+	public Set<Character> getAllElementIds() {
+		return getKeysFromElementIdToValueStringMap(()->elementToValueStringMap.keySet());
 	}
 	
-	private HashMap<Character, ArrayList<String>> getElementToValueStringMap(
-		Supplier<HashMap<Character, ArrayList<String>>> returnMap) {
-		return returnMap.get();
+	private Set<Character> getKeysFromElementIdToValueStringMap(
+		Supplier<Set<Character>> getKeys) {
+		return getKeys.get();
 	}
+	
+	public ArrayList<String> getArgumentValues(char elementId) {
+		return getValueArrayFromMap(elementId, key -> elementToValueStringMap.containsKey(key) ? elementToValueStringMap.get(key) : new ArrayList<String>());
+	}
+	
+	private ArrayList<String> getValueArrayFromMap(
+		char elementId,
+		Function<Character, ArrayList<String>> getValueArray) {
+		return getValueArray.apply(elementId);
+	}
+	
 	
 	private void parseArguments(
-		String[] arguments) {
+		List<String> arguments) {
 		iterateAndParseArguments.accept(arguments, 0);
 	}
 	
-	BiConsumer<String[], Integer> iterateAndParseArguments = (stringArray, index) -> {
-		if(isIndexOutOfRange(stringArray, index, (array,i) -> i >= array.length))
-			return;
-		char elementId = getElementId(stringArray[index], (string) -> string.length()>=2, (string) -> string.charAt(1));
-		if(isElementIdAndNotBooleanElement(stringArray, index))
-			insertElementIdAndArgumentValue(elementId, stringArray[index+1],(key) -> elementToValueStringMap.containsKey(key));
-		else if(isElementId(stringArray[index], (string) -> string.startsWith("-"))) 
-			insertElementIdAndArgumentValue(elementId,"true",(key) -> elementToValueStringMap.containsKey(key));
+	private BiConsumer<List<String>, Integer> iterateAndParseArguments = (stringArray, index) -> {
+		if(isIndexOutOfRange(stringArray, index, (array,i) -> i >= array.size())) return;
+		checkArgumentTypeAndInsertValue(stringArray, index, (array,i) -> isElementIdAndNotBooleanElement(array, i), (string1) -> isElementId(string1, (string2) -> string2.startsWith("-")));
 		this.iterateAndParseArguments.accept(stringArray, index+1);
 	};
+	
+	private void checkArgumentTypeAndInsertValue(
+		List<String> stringArray,
+		int index,
+		BiPredicate<List<String>, Integer> isElementIdAndNotBooleanElement,
+		Predicate<String> isBooleanElement) {
+		char elementId = getElementId(stringArray.get(index), (string) -> string.length()>=2, (string) -> string.charAt(1));
+		if(isElementIdAndNotBooleanElement.test(stringArray, index))
+			insertElementIdAndArgumentValue(elementId, stringArray.get(index+1),(key) -> elementToValueStringMap.containsKey(key));
+		else if(isBooleanElement.test(stringArray.get(index)))
+			insertElementIdAndArgumentValue(elementId,"true",(key) -> elementToValueStringMap.containsKey(key));
+	}
 	
 	private void insertElementIdAndArgumentValue(
 		char elementId,
@@ -53,9 +76,9 @@ public class ArgumentList {
 		mapArgumentValueToElementId(elementId, argumentValue, (key,value) -> elementToValueStringMap.get(key).add(value));
 	}
 	
-	private String[] getArgumentList(
+	private List<String> getArgumentList(
 		String argumentString,
-		Function<String,String[]> splitString) {
+		Function<String,List<String>> splitString) {
 		return splitString.apply(argumentString);
 	}
 	
@@ -66,18 +89,18 @@ public class ArgumentList {
 	}
 	
 	private boolean isIndexOutOfRange(
-		String[] array,
+		List<String> array,
 		int index,
-		BiPredicate<String[], Integer> indexLessThanArraySize) {
+		BiPredicate<List<String>, Integer> indexLessThanArraySize) {
 		return indexLessThanArraySize.test(array, index);
 	}
 	
 	private boolean isElementIdAndNotBooleanElement(
-		String[] stringArray,
+		List<String> stringArray,
 		int index) {
-		return isElementId(stringArray[index], (string) -> string.startsWith("-"))
-				&& isIndexOutOfRange(stringArray, index+1, (array,i) -> i < array.length)
-				&& !isElementId(stringArray[index+1], (string) -> string.startsWith("-")); 
+		return isElementId(stringArray.get(index), (string) -> string.startsWith("-"))
+				&& isIndexOutOfRange(stringArray, index+1, (array,i) -> i < array.size())
+				&& !isElementId(stringArray.get(index+1), (string) -> string.startsWith("-")); 
 	}
 	
 	private void insertKeyInMap(

@@ -3,9 +3,12 @@ package javaargs.functional;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class Schema {
 	
@@ -14,7 +17,17 @@ public class Schema {
 	public Schema(
 		String schemaString) {
 		List<String> schemaElements = getSchemaElements(schemaString, (string) -> Arrays.asList(string.split(",")));
+		schemaElements = schemaElements.stream().map(string -> string.trim()).filter(string -> !string.isEmpty()).collect(Collectors.toList());
 		parseAndStoreSchemaElements(schemaElements);
+	}
+	
+	public Set<Character> getAllElementIds() {
+		return getKeysFromElementIdToArgumentTypeMap(()->elementIdToArgumentTypeMap.keySet());
+	}
+	
+	private Set<Character> getKeysFromElementIdToArgumentTypeMap(
+		Supplier<Set<Character>> getKeys) {
+		return getKeys.get();
 	}
 	
 	public Constants.ArgumentType getArgumentType(

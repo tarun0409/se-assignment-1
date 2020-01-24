@@ -1,8 +1,5 @@
 package javaargs.functional;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 public class StringArgument 
 	implements Argument {
 	
@@ -15,16 +12,5 @@ public class StringArgument
 	public void setValue(
 		String value) {
 		this.value = value;
-	}
-	
-	public void setStringArgument( 
-		String value,
-		Consumer<String> setArgument) {
-		setArgument.accept(value);
-	}
-				
-	public String getStringArgument(
-		Supplier<String> getValue) {
-		return getValue.get();
 	}
 }
