@@ -8,12 +8,13 @@ import java.util.function.Supplier;
 
 public class SerializedArguments {
 	
-	private HashMap<Character,Argument> elementIdToArgumentMap;
+	private HashMap<Character,Argument> elementIdToArgumentMap = new HashMap<Character, Argument>();
 	private BiConsumer<Character, Argument> mapElementIdToArgument = (key, value) -> elementIdToArgumentMap.put(key, value);
 	private Function<Character, Argument> retrieveArgumentValueFromElementId = key -> elementIdToArgumentMap.get(key);
 	
-	public SerializedArguments() {
-		elementIdToArgumentMap = new HashMap<Character, Argument>();
+	public SerializedArguments(String schemaString, String argumentListString) {
+		Schema schema = new Schema(schemaString);
+		ArgumentList argumentList = new ArgumentList(argumentListString);
 	}
 	
 	public void setAndStoreBooleanArgument(

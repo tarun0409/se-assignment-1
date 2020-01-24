@@ -17,6 +17,17 @@ public class Schema {
 		parseAndStoreSchemaElements(schemaElements);
 	}
 	
+	public Constants.ArgumentType getArgumentType(
+		char elementId) {
+		return getArgumentTypeFromElementId(elementId, (key) -> elementIdToArgumentTypeMap.get(key));
+	}
+	
+	private Constants.ArgumentType getArgumentTypeFromElementId(
+		char elementId,
+		Function<Character,Constants.ArgumentType> retrieveArgumentType) {
+		return retrieveArgumentType.apply(elementId);
+	}
+	
 	private List<String> getSchemaElements(
 		String schemaString,
 		Function<String, List<String>> splitString) {
