@@ -74,7 +74,9 @@ public class Schema {
 	private Constants.ArgumentType getArgumentTypeFromTypeString(
 		String typeString,
 		Function<String, Constants.ArgumentType> retrieveArgumentTypeFromMap) {
-		return retrieveArgumentTypeFromMap.apply(typeString);
+		Constants.ArgumentType argumentType = retrieveArgumentTypeFromMap.apply(typeString);
+		if(argumentType == null) throw new InvalidSchema();
+		return argumentType;
 	}
 	
 	private void mapElementIdToArgumentType(
