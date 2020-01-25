@@ -8,6 +8,7 @@ public class LoadedArgument {
 	private Constants.ArgumentType argumentType;
 	private ArrayList<String> valueStrings;
 	private Consumer<LoadedArgument> storeFunction;
+	
 	public Constants.ArgumentType getArgumentType() {
 		return argumentType;
 	}
