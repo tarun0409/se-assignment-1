@@ -33,10 +33,6 @@ public class ArgumentList {
 		return getKeys.get();
 	}
 	
-	public ArrayList<String> getArgumentValues(char elementId) {
-		return getValueArrayFromMap(elementId, key -> elementToValueStringMap.containsKey(key) ? elementToValueStringMap.get(key) : new ArrayList<String>());
-	}
-	
 	private ArrayList<String> getValueArrayFromMap(
 		char elementId,
 		Function<Character, ArrayList<String>> getValueArray) {
@@ -51,20 +47,23 @@ public class ArgumentList {
 	
 	private BiConsumer<List<String>, Integer> iterateAndParseArguments = (stringArray, index) -> {
 		if(isIndexOutOfRange(stringArray, index, (array,i) -> i >= array.size())) return;
-		checkArgumentTypeAndInsertValue(stringArray, index, (array,i) -> isElementIdAndNotBooleanElement(array, i), (string1) -> isElementId(string1, (string2) -> string2.startsWith("-")));
+		checkArgumentTypeAndInsertValue(stringArray, index);
 		this.iterateAndParseArguments.accept(stringArray, index+1);
 	};
 	
 	private void checkArgumentTypeAndInsertValue(
 		List<String> stringArray,
-		int index,
-		BiPredicate<List<String>, Integer> isElementIdAndNotBooleanElement,
-		Predicate<String> isBooleanElement) {
+		int index) {
 		char elementId = getElementId(stringArray.get(index), (string) -> string.length()>=2, (string) -> string.charAt(1));
-		if(isElementIdAndNotBooleanElement.test(stringArray, index))
+		if(isElementIdAndNotBooleanElement(stringArray, index))
 			insertElementIdAndArgumentValue(elementId, stringArray.get(index+1),(key) -> elementToValueStringMap.containsKey(key));
-		else if(isBooleanElement.test(stringArray.get(index)))
+		else if(isBooleanElement(stringArray.get(index)))
 			insertElementIdAndArgumentValue(elementId,"true",(key) -> elementToValueStringMap.containsKey(key));
+	}
+	
+	private boolean isBooleanElement(
+		String element) {
+		return isElementId(element, (string) -> string.startsWith("-"));
 	}
 	
 	private void insertElementIdAndArgumentValue(
@@ -76,9 +75,15 @@ public class ArgumentList {
 		mapArgumentValueToElementId(elementId, argumentValue, (key,value) -> elementToValueStringMap.get(key).add(value));
 	}
 	
+	private boolean argumentListIsEmpty(
+		String argumentList) {
+		return argumentList.isEmpty();
+	}
+	
 	private List<String> getArgumentList(
 		String argumentString,
 		Function<String,List<String>> splitString) {
+		if(argumentListIsEmpty(argumentString)) throw new InvalidArgumentList();
 		return splitString.apply(argumentString);
 	}
 	
@@ -123,5 +128,8 @@ public class ArgumentList {
 		addToValueArray.accept(elementId, value);
 	}
 	
+	public ArrayList<String> getArgumentValues(char elementId) {
+		return getValueArrayFromMap(elementId, key -> elementToValueStringMap.containsKey(key) ? elementToValueStringMap.get(key) : new ArrayList<String>());
+	}
 
 }

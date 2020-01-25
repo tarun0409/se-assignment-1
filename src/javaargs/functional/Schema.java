@@ -30,20 +30,21 @@ public class Schema {
 		return getKeys.get();
 	}
 	
-	public Constants.ArgumentType getArgumentType(
-		char elementId) {
-		return getArgumentTypeFromElementId(elementId, (key) -> elementIdToArgumentTypeMap.get(key));
-	}
-	
 	private Constants.ArgumentType getArgumentTypeFromElementId(
 		char elementId,
 		Function<Character,Constants.ArgumentType> retrieveArgumentType) {
 		return retrieveArgumentType.apply(elementId);
 	}
 	
+	private boolean schemaStringIsEmpty(
+		String schemaString) {
+		return schemaString.isEmpty();
+	}
+	
 	private List<String> getSchemaElements(
 		String schemaString,
 		Function<String, List<String>> splitString) {
+		if(schemaStringIsEmpty(schemaString)) throw new InvalidSchema();
 		return splitString.apply(schemaString);
 	}
 	
@@ -81,6 +82,17 @@ public class Schema {
 		Constants.ArgumentType argumentType,
 		BiConsumer<Character, Constants.ArgumentType> mapArgumentToType) {
 		mapArgumentToType.accept(elementId, argumentType);
+	}
+	
+	private boolean argumentIsNotAvailable(
+		char elementId) {
+		return !elementIdToArgumentTypeMap.containsKey(elementId);
+	}
+	
+	public Constants.ArgumentType getArgumentType(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new InvalidSchema();
+		return getArgumentTypeFromElementId(elementId, (key) -> elementIdToArgumentTypeMap.get(key));
 	}
 
 }

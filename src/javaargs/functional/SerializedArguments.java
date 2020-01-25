@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class SerializedArguments {
 	
@@ -14,69 +16,94 @@ public class SerializedArguments {
 	private HashMap<Constants.ArgumentType, Consumer<LoadedArgument>> argumentTypeToStoreFunctionMap = new HashMap<Constants.ArgumentType, Consumer<LoadedArgument>>();
 	private Schema schema;
 	private ArgumentList argumentList;
+	private Set<Character> elementIds;
 	
-	public SerializedArguments(String schemaString, String argumentListString) {
-		schema = new Schema(schemaString);
-		argumentList = new ArgumentList(argumentListString);
-		fillArgumentTypeToStoreFunctionMap();
-		Set<Character> elementIds = schema.getAllElementIds();
-		elementIds.stream().map(elementId -> setArgumentTypeAndArgumentValues(elementId))
-						   .map(loadedArgument -> setValidateAndStoreFunction(loadedArgument))
-						   .forEach(loadedFunction -> validateAndStore(loadedFunction, loadedFunction.getStoreFunction()));
-	}
-	
-	Function<ArrayList<String>, HashMap<String,String>> convertArrayStringToMap = stringArray -> {
-		HashMap<String,String> mapObject = new HashMap<String,String>();
-		stringArray.forEach(entryString -> {
-			String[] mapEntry = getMapEntries(entryString, string -> string.split(":"));
-			mapObject.put(mapEntry[0], mapEntry[1]);
-		});
+	BiFunction<String[],HashMap<String,String>,HashMap<String,String>> insertMapEntry = (mapEntry, mapObject) -> {
+		mapObject.put(mapEntry[0], mapEntry[1]);
 		return mapObject;
 	};
 	
-	private void validateAndStore(
-		LoadedArgument loadedArgument,
-		Consumer<LoadedArgument> validateAndStoreFunction) {
-		validateAndStoreFunction.accept(loadedArgument);
-	}
+	Function<ArrayList<String>, HashMap<String,String>> convertArrayStringToMap = stringArray -> {
+		HashMap<String,String> mapObject = new HashMap<String,String>();
+		stringArray.forEach(entryString -> insertMapEntryIntoMapObject(getMapEntries(entryString, string -> string.split(":")), mapObject, insertMapEntry));
+		return mapObject;
+	};
 	
-	Consumer<LoadedArgument> validateAndStoreBooleanArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreBooleanArgument = loadedArgument -> {
 		BooleanArgument booleanArgument = new BooleanArgument();
 		booleanArgument.setValue(getBooleanArgument(loadedArgument.getValueStrings(), array -> array.isEmpty()));
 		setArgument(loadedArgument.getElementId(), booleanArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	Consumer<LoadedArgument> validateAndStoreIntegerArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreIntegerArgument = loadedArgument -> {
 		IntegerArgument integerArgument = new IntegerArgument();
-		integerArgument.setValue(getIntegerArgument(loadedArgument.getValueStrings(), array -> Integer.parseInt(array.get(0))));
+		integerArgument.setValue(getIntegerArgument(loadedArgument.getValueStrings(), parseIntegerSafely(array -> Integer.parseInt(array.get(0)))));
 		setArgument(loadedArgument.getElementId(), integerArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	Consumer<LoadedArgument> validateAndStoreDoubleArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreDoubleArgument = loadedArgument -> {
 		DoubleArgument doubleArgument = new DoubleArgument();
-		doubleArgument.setValue(getDoubleArgument(loadedArgument.getValueStrings(), array -> Double.parseDouble(array.get(0))));
+		doubleArgument.setValue(getDoubleArgument(loadedArgument.getValueStrings(), parseDoubleSafely(array -> Double.parseDouble(array.get(0)))));
 		setArgument(loadedArgument.getElementId(), doubleArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	Consumer<LoadedArgument> validateAndStoreStringArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreStringArgument = loadedArgument -> {
 		StringArgument stringArgument = new StringArgument();
-		stringArgument.setValue(getStringArgument(loadedArgument.getValueStrings(), array -> array.get(0)));
+		stringArgument.setValue(getStringArgument(loadedArgument.getValueStrings(), extractStringSafely(array -> array.get(0))));
 		setArgument(loadedArgument.getElementId(), stringArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	Consumer<LoadedArgument> validateAndStoreStringArrayArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreStringArrayArgument = loadedArgument -> {
 		StringArrayArgument stringArrayArgument = new StringArrayArgument();
 		stringArrayArgument.setValue(loadedArgument.getValueStrings());
 		setArgument(loadedArgument.getElementId(), stringArrayArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	Consumer<LoadedArgument> validateAndStoreMapArgument = loadedArgument -> {
+	Consumer<LoadedArgument> setAndStoreMapArgument = loadedArgument -> {
 		MapArgument mapArrayArgument = new MapArgument();
 		mapArrayArgument.setValue(getMapArgument(loadedArgument.getValueStrings(), convertArrayStringToMap));
 		setArgument(loadedArgument.getElementId(), mapArrayArgument, (key,value) -> elementIdToArgumentMap.put(key, value));
 	};
 	
-	private LoadedArgument setValidateAndStoreFunction(
+	public SerializedArguments(
+		String schemaString, 
+		String argumentListString) {
+		getLoadedArgumentAttributes(schemaString, argumentListString);
+		fillArgumentTypeToStoreFunctionMap();
+		mapElementIdToArgumentObject();
+	}
+	
+	private HashMap<String,String> insertMapEntryIntoMapObject(
+		String[] mapEntry,
+		HashMap<String,String> mapObject,
+		BiFunction<String[], HashMap<String,String>, HashMap<String,String>> insertIntoMap) {
+		return insertIntoMap.apply(mapEntry, mapObject);
+	}
+	
+	private void mapElementIdToArgumentObject() {
+		elementIds.stream().map(elementId -> setArgumentTypeAndArgumentValues(elementId))
+		   .map(loadedArgument -> updateSetAndStoreFunction(loadedArgument))
+		   .forEach(loadedArgument -> validateAndStoreArgument(loadedArgument, loadedArgument.getStoreFunction()));
+	}
+	
+	private void getLoadedArgumentAttributes(String schemaString, String argumentListString) {
+		schema = new Schema(schemaString);
+		argumentList = new ArgumentList(argumentListString);
+		elementIds = getElementIds(() -> schema.getAllElementIds());
+	}
+	
+	private Set<Character> getElementIds(
+		Supplier<Set<Character>> getElementIdFromSchemaObject) {
+		return getElementIdFromSchemaObject.get();
+	}
+	
+	private void validateAndStoreArgument(
+		LoadedArgument loadedArgument,
+		Consumer<LoadedArgument> validateAndStoreFunction) {
+		validateAndStoreFunction.accept(loadedArgument);
+	}
+	
+	private LoadedArgument updateSetAndStoreFunction(
 		LoadedArgument loadedArgument) {
 		loadedArgument.setStoreFunction(argumentTypeToStoreFunctionMap.get(loadedArgument.getArgumentType()));
 		return loadedArgument;
@@ -126,12 +153,12 @@ public class SerializedArguments {
 	}
 	
 	private void fillArgumentTypeToStoreFunctionMap() {
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.BOOLEAN, validateAndStoreBooleanArgument);
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.INTEGER, validateAndStoreIntegerArgument);
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.DOUBLE, validateAndStoreDoubleArgument);
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.STRING, validateAndStoreStringArgument);
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.STRING_ARRAY, validateAndStoreStringArrayArgument);
-		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.MAP, validateAndStoreMapArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.BOOLEAN, setAndStoreBooleanArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.INTEGER, setAndStoreIntegerArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.DOUBLE, setAndStoreDoubleArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.STRING, setAndStoreStringArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.STRING_ARRAY, setAndStoreStringArrayArgument);
+		argumentTypeToStoreFunctionMap.put(Constants.ArgumentType.MAP, setAndStoreMapArgument);
 	}
 	
 	private LoadedArgument setArgumentTypeAndArgumentValues(
@@ -143,33 +170,80 @@ public class SerializedArguments {
 		return loadedArgument;
 	}
 	
-	public boolean getBooleanValue(char elementId) {
-		BooleanArgument booleanArgument = (BooleanArgument)elementIdToArgumentMap.get(elementId);
-		return booleanArgument.getValue();
+	private boolean argumentIsNotAvailable(
+		char elementId) {
+		return !elementIdToArgumentMap.containsKey(elementId);
 	}
 	
-	public int getIntegerValue(char elementId) {
-		IntegerArgument integerArgument = (IntegerArgument)elementIdToArgumentMap.get(elementId);
-		return integerArgument.getValue();
+	private Function<ArrayList<String>, Integer> parseIntegerSafely(
+		Function<ArrayList<String>, Integer> parseInteger) {
+		try {
+			return array -> parseInteger.apply(array);
+		}
+		catch(NumberFormatException ex) {
+			throw new ArgumentTypeMismatch();
+		}
+		catch(IndexOutOfBoundsException ex) {
+			throw new InvalidArgumentList();
+		}
 	}
 	
-	public double getDoubleValue(char elementId) {
-		DoubleArgument doubleArgument = (DoubleArgument)elementIdToArgumentMap.get(elementId);
-		return doubleArgument.getValue();
+	private Function<ArrayList<String>, Double> parseDoubleSafely(
+		Function<ArrayList<String>, Double> parseDouble) {
+		try {
+			return array -> parseDouble.apply(array);
+		}
+		catch(NumberFormatException ex) {
+			throw new ArgumentTypeMismatch();
+		}
+		catch(IndexOutOfBoundsException ex) {
+			throw new InvalidArgumentList();
+		}
+	}
+	private Function<ArrayList<String>, String> extractStringSafely(
+		Function<ArrayList<String>, String> extractString) {
+		try {
+			return array -> extractString.apply(array);
+		}
+		catch(IndexOutOfBoundsException ex) {
+			throw new InvalidArgumentList();
+		}
 	}
 	
-	public String getStringValue(char elementId) {
-		StringArgument stringArgument = (StringArgument)elementIdToArgumentMap.get(elementId);
-		return stringArgument.getValue();
+	
+	public boolean getBooleanValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((BooleanArgument)elementIdToArgumentMap.get(elementId)).getValue();
 	}
 	
-	public ArrayList<String> getStringArrayValue(char elementId) {
-		StringArrayArgument stringArrayArgument = (StringArrayArgument)elementIdToArgumentMap.get(elementId);
-		return stringArrayArgument.getValue();
+	public int getIntegerValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((IntegerArgument)elementIdToArgumentMap.get(elementId)).getValue();
 	}
 	
-	public HashMap<String,String> getMapValue(char elementId) {
-		MapArgument mapArgument = (MapArgument)elementIdToArgumentMap.get(elementId);
-		return mapArgument.getValue();
+	public double getDoubleValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((DoubleArgument)elementIdToArgumentMap.get(elementId)).getValue();
+	}
+	
+	public String getStringValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((StringArgument)elementIdToArgumentMap.get(elementId)).getValue();
+	}
+	
+	public ArrayList<String> getStringArrayValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((StringArrayArgument)elementIdToArgumentMap.get(elementId)).getValue();
+	}
+	
+	public HashMap<String,String> getMapValue(
+		char elementId) {
+		if(argumentIsNotAvailable(elementId)) throw new ArgumentUnavailable();
+		return ((MapArgument)elementIdToArgumentMap.get(elementId)).getValue();
 	}
 }
