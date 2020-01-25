@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ArgumentList {
@@ -24,13 +22,8 @@ public class ArgumentList {
 		parseArguments(arguments);
 	}
 	
-	public Set<Character> getAllElementIds() {
-		return getKeysFromElementIdToValueStringMap(()->elementToValueStringMap.keySet());
-	}
-	
-	private Set<Character> getKeysFromElementIdToValueStringMap(
-		Supplier<Set<Character>> getKeys) {
-		return getKeys.get();
+	public ArrayList<String> getArgumentValues(char elementId) {
+		return getValueArrayFromMap(elementId, key -> elementToValueStringMap.containsKey(key) ? elementToValueStringMap.get(key) : new ArrayList<String>());
 	}
 	
 	private ArrayList<String> getValueArrayFromMap(
@@ -127,9 +120,4 @@ public class ArgumentList {
 		BiConsumer<Character, String> addToValueArray) {
 		addToValueArray.accept(elementId, value);
 	}
-	
-	public ArrayList<String> getArgumentValues(char elementId) {
-		return getValueArrayFromMap(elementId, key -> elementToValueStringMap.containsKey(key) ? elementToValueStringMap.get(key) : new ArrayList<String>());
-	}
-
 }

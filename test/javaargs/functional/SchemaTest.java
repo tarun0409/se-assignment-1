@@ -12,6 +12,7 @@ public class SchemaTest {
 	@Test
 	public void createSchemaObject() {
 		try {
+			@SuppressWarnings("unused")
 			Schema schema = new Schema("f,s*,n#,a##,p[*]");
 		}
 		catch(InvalidSchema is) {
@@ -22,6 +23,7 @@ public class SchemaTest {
 	@Test
 	public void emptySchemaString() {
 		try {
+			@SuppressWarnings("unused")
 			Schema schema = new Schema("");
 			fail("Empty string was passed. Exception should have been thrown");
 		}
@@ -33,6 +35,7 @@ public class SchemaTest {
 	@Test
 	public void invalidSchemaString() {
 		try {
+			@SuppressWarnings("unused")
 			Schema schema = new Schema("f^,s*,n#,a##,p[*]");
 			fail("Invalid symbol was passed. Exception should have been thrown");
 		}
