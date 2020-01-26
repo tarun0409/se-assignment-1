@@ -7,6 +7,7 @@
 
 ### Architecture of the project
 
+```
 
 src - Contains code for all functionalities
 |
@@ -48,20 +49,27 @@ test - contains JUnit4 unit test codes
 |                |-- StringArgumentTest.java - Tests functionalities of StringArgument.java
 |                |-- StringArrayArgumentTest.java - Tests functionalities of StringArrayArgument.java
 
+```
+
 ### Instructions
 
 * Create an instance of the class *SerializedArguments* with a valid schema string and command line arguments to store the command line arguments to be used later
-* An ArgTest.java has already been provided with a main function as a sample to use the feature
+* An **ArgTest.java** has already been provided with a main function as a sample to use the feature
 * Syntax for a valid schema is given below
 
 [One character ID][Type Escape Sequence],[One character ID][Type Escape Sequence],...
 
 #### Type Escape Sequences
 **Boolean** - No escape sequence. Simply providing ID will be enough
+
 **Integer** - #
+
 **Double** - ##
+
 **String** - *
+
 **String Array** - [*]
+
 **Map** - &
 
 #### Examples of valid schema
@@ -82,8 +90,8 @@ test - contains JUnit4 unit test codes
 
 ### Characteristics of clean code followed
 
-* The code has been written in *Functional Programming Paradigm* which makes it neat as a function is assigned for each specific task to be done in the code
-* Java 8 *Lambdas and Streams* have been used whenever necessary to modularize the code and make it look more intuitive
+* The code has been written in **Functional Programming Paradigm** which makes it neat as a function is assigned for each specific task to be done in the code
+* Java 8 **Lambdas and Streams** have been used whenever necessary to modularize the code and make it look more intuitive
 * Majority of the functions do not contain more than 3 arguments. If it contains, it will mostly be lambdas being passed.
 * Function arguments have been written one below the other in a neat and readable fashion
 * Most of the functions do not have more than 3-4 lines of code since it executes only one specific functionalities
