@@ -38,18 +38,18 @@ src - Contains code for all functionalities
 test - contains JUnit4 unit test codes
 |
 |-- javaargs
-|       |
-|       |-- functional
-|                |
-|                |-- ArgumentListTest.java - Tests functionalities of ArgumentList.java
-|                |-- DoubleArgumentTest.java - Tests functionalities of DoubleArgument.java
-|                |-- IntegerArgumentTest.java - Tests functionalities of IntegerArgument.java
-|                |-- LoadedArgumentTest.java - Tests functionalities of LoadedArgument.java
-|                |-- MapArgumentTest.java - Tests functionalities of MapArgument.java
-|                |-- SchemaTest.java - Tests functionalities of Schema.java
-|                |-- SerializedArgumentsTest.java - Tests functionalities of SerializedArguments.java
-|                |-- StringArgumentTest.java - Tests functionalities of StringArgument.java
-|                |-- StringArrayArgumentTest.java - Tests functionalities of StringArrayArgument.java
+        |
+        |-- functional
+                 |
+                 |-- ArgumentListTest.java - Tests functionalities of ArgumentList.java
+                 |-- DoubleArgumentTest.java - Tests functionalities of DoubleArgument.java
+                 |-- IntegerArgumentTest.java - Tests functionalities of IntegerArgument.java
+                 |-- LoadedArgumentTest.java - Tests functionalities of LoadedArgument.java
+                 |-- MapArgumentTest.java - Tests functionalities of MapArgument.java
+                 |-- SchemaTest.java - Tests functionalities of Schema.java
+                 |-- SerializedArgumentsTest.java - Tests functionalities of SerializedArguments.java
+                 |-- StringArgumentTest.java - Tests functionalities of StringArgument.java
+                 |-- StringArrayArgumentTest.java - Tests functionalities of StringArrayArgument.java
 
 ```
 
@@ -62,17 +62,17 @@ test - contains JUnit4 unit test codes
 [One character ID][Type Escape Sequence],[One character ID][Type Escape Sequence],...
 
 #### Type Escape Sequences
-**Boolean** - No escape sequence. Simply providing ID will be enough
+*Boolean* - No escape sequence. Simply providing ID will be enough
 
-**Integer** - #
+*Integer* - #
 
-**Double** - ##
+*Double* - ##
 
-**String** - *
+*String* - *
 
-**String Array** - [*]
+*String Array* - [*]
 
-**Map** - &
+*Map* - &
 
 #### Examples of valid schema
 
