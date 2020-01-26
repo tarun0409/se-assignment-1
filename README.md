@@ -1,5 +1,7 @@
 ## Command Line Argument Storage
 
+### Submitted By - Tarun Mohandas (2018201008)
+
 ### Specifications and Requirements
 * The code has been written in Java SE 8
 * The unit tests have been written in JUnit 4
@@ -75,7 +77,9 @@ test - contains JUnit4 unit test codes
 #### Examples of valid schema
 
 "f,s*,n#,a##,p[*]"
+
 "f,s*,k&"
+
 "s*"
 
 * The command line arguments should contain values for the IDs present in the schema. The following is the syntax for command line arguments
